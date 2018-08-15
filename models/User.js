@@ -11,7 +11,7 @@ const UserSchema = new Schema({
     type: String,
     required: true
   },
-  permissions: {
+  permission: {
     type: Boolean,
     required: true
   }
