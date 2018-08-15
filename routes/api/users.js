@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const passport = require("passport");
 
 const key = require("../../config/keys").secret_key;
 const User = require("../../models/User");
@@ -17,7 +18,7 @@ router.get("/test", (req, res) => res.json({ msg: "users OK" }));
 router.post("/create", (req, res) => {
   User.findOne({ name: req.body.name }).then(user => {
     if (user) {
-      return req.status(400).json({ name: "user already exists" });
+      return res.status(400).json({ name: "user already exists" });
     } else {
       const newUser = new User({
         name: req.body.name,
@@ -53,7 +54,7 @@ router.post("/login", (req, res) => {
     }
     bcrypt.compare(password, user.password).then(isMatch => {
       if (isMatch) {
-        const userPayload = { id: user._id };
+        const userPayload = { id: user.id, permission: user.permission };
 
         // sign token using jwt
         jwt.sign(userPayload, key, { expiresIn: 3600 }, (err, token) => {
@@ -65,5 +66,16 @@ router.post("/login", (req, res) => {
     });
   });
 });
+
+// @route   GET api/users/current
+// @desc    return current user
+// @access  private
+router.get(
+  "/current",
+  passport.authenticate("jwt", { session: false }),
+  (req, res) => {
+    res.json(req.user);
+  }
+);
 
 module.exports = router;
